@@ -35,22 +35,30 @@ int main()
         else
         {
             // TODO: 在此处为应用程序的行为编写代码。
-            // 套接字初始化
-            SOCKET serv_scok = socket(PF_INET, SOCK_STREAM, 0); // TODO: 校验
-            sockaddr_in serv_adr, client_adr;
-            memset(&serv_adr, 0, sizeof(serv_adr));
-            serv_adr.sin_family = AF_INET;
-            serv_adr.sin_addr.s_addr = INADDR_ANY;
-            serv_adr.sin_port = htons(9527);
-
-            bind(serv_scok, (sockaddr*)&serv_adr, sizeof(serv_adr)); // TODO: 
-            listen(serv_scok, 1); // TODO:
-            char buffer[1024];
-            // int cli_sz = sizeof(client_adr);
-            // SOCKET client = accept(serv_scok, (sockaddr*)&client, &cli_sz);
-            // recv(client, buffer, sizeof(buffer), 0);
-            // send(client, buffer, sizeof(buffer), 0);
-            closesocket(serv_scok);
+            CServerSocket* pserver = CServerSocket::getInstance();
+            if (pserver)
+			{
+				if (pserver->InitSocket() == false)
+				{
+					MessageBox(NULL, _T("网络初始化异常，未能成功初始化，请检查网络状态！"), _T("网络初始化失败"), MB_OK | MB_ICONERROR);
+					exit(0);
+				}
+                int count = 0;
+                while (pserver != NULL)
+				{
+					if (pserver->AcceptClient() == false)
+					{
+                        if (count >= 3) {
+                            MessageBox(NULL, _T("多次无法接入，结束程序！"), _T("接入用户失败！"), MB_OK | MB_ICONERROR);
+                            exit(0);
+                        }
+						MessageBox(NULL, _T("无法正常接入，自动重试"), _T("接入用户失败！"), MB_OK | MB_ICONERROR);
+                        count++;
+					}
+                    int ret = pserver->DealCommand();
+                    // TODO:
+                }
+            }
         }
     }
     else
